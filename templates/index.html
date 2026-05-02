@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ElectionBot — Learn How Elections Work</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    header {
+      text-align: center;
+      padding: 24px 16px 12px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    header h1 span { color: #f97316; }
+
+    header p {
+      color: #a0a0c0;
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    /* Tab nav */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0 8px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: #ccc;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: #f97316;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Panels */
+    .panel { display: none; width: 100%; max-width: 800px; }
+    .panel.active { display: block; }
+
+    /* Chat panel */
+    #chat-box {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      height: 420px;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .message.bot {
+      background: rgba(249,115,22,0.15);
+      border: 1px solid rgba(249,115,22,0.3);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user {
+      background: rgba(99,102,241,0.25);
+      border: 1px solid rgba(99,102,241,0.4);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.error {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      align-self: flex-start;
+      color: #fca5a5;
+    }
+
+    /* Quick topics */
+    .quick-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .quick-btn {
+      padding: 7px 13px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      color: #ddd;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-btn:hover { background: rgba(249,115,22,0.3); border-color: #f97316; color: #fff; }
+
+    /* Input row */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    #user-input:focus { border-color: #f97316; }
+    #user-input::placeholder { color: #888; }
+
+    #send-btn {
+      padding: 12px 22px;
+      background: #f97316;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #send-btn:hover { background: #ea6b0f; }
+    #send-btn:disabled { background: #555; cursor: not-allowed; }
+
+    /* Timeline panel */
+    .timeline { padding: 12px 0; }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+
+    .tl-dot {
+      min-width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #f97316;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .tl-content h3 { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .tl-content p { font-size: 0.88rem; color: #a0a0c0; line-height: 1.5; }
+    .tl-content .duration {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 10px;
+      background: rgba(249,115,22,0.2);
+      border-radius: 12px;
+      font-size: 0.78rem;
+      color: #f97316;
+    }
+
+    /* Quiz panel */
+    .quiz-area { padding: 8px 0; }
+
+    .quiz-question {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+    .quiz-opt {
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: all 0.2s;
+      text-align: left;
+      color: #ddd;
+    }
+
+    .quiz-opt:hover { background: rgba(249,115,22,0.2); border-color: #f97316; }
+    .quiz-opt.correct { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #86efac; }
+    .quiz-opt.wrong { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5; }
+
+    #quiz-feedback {
+      min-height: 40px;
+      font-size: 0.9rem;
+      color: #a0a0c0;
+      margin-bottom: 12px;
+    }
+
+    #next-q-btn {
+      padding: 10px 24px;
+      background: #f97316;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    .score-display {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #a0a0c0;
+      margin-bottom: 8px;
+    }
+
+    /* Glossary panel */
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 500px) { .glossary-grid { grid-template-columns: 1fr; } }
+
+    .gloss-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .gloss-card h4 { font-size: 0.95rem; color: #f97316; margin-bottom: 4px; }
+    .gloss-card p { font-size: 0.84rem; color: #b0b0c8; line-height: 1.5; }
+
+    footer {
+      margin-top: 20px;
+      font-size: 0.78rem;
+      color: #555;
+      text-align: center;
+    }
+
+    /* Typing indicator */
+    .typing { display: flex; gap: 4px; align-items: center; padding: 8px 12px; }
+    .typing span {
+      width: 7px; height: 7px; background: #f97316; border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+      40% { transform: translateY(-6px); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🗳️ Election<span>Bot</span></h1>
+    <p>Your friendly guide to understanding how elections work in India</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('chat')" role="tab" aria-selected="true">💬 Ask ElectionBot</button>
+    <button class="tab-btn" onclick="switchTab('timeline')" role="tab">📅 Timeline</button>
+    <button class="tab-btn" onclick="switchTab('quiz')" role="tab">🧠 Quiz</button>
+    <button class="tab-btn" onclick="switchTab('glossary')" role="tab">📖 Glossary</button>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="panel active" id="panel-chat">
+    <div id="chat-box" role="log" aria-live="polite" aria-label="Chat conversation">
+      <div class="message bot">👋 Hi! I'm <strong>ElectionBot</strong>. I can help you understand everything about Indian elections — from voter registration to how winners are declared. What would you like to know?</div>
+    </div>
+    <div class="quick-topics" role="group" aria-label="Quick topic suggestions">
+      {% for topic in quick_topics %}
+      <button class="quick-btn" onclick="sendQuick('{{ topic }}')" aria-label="Ask: {{ topic }}">{{ topic }}</button>
+      {% endfor %}
+    </div>
+    <div class="input-row">
+      <label for="user-input" class="sr-only">Type your question about elections</label>
+      <input type="text" id="user-input" placeholder="Ask anything about elections..." maxlength="500"
+             aria-label="Your question" onkeydown="if(event.key==='Enter') sendMessage()"/>
+      <button id="send-btn" onclick="sendMessage()" aria-label="Send message">Send</button>
+    </div>
+  </div>
+
+  <!-- TIMELINE PANEL -->
+  <div class="panel" id="panel-timeline">
+    <div class="timeline" role="list">
+      <div class="timeline-item" role="listitem">
+        <div class="tl-dot" aria-hidden="true">1</div>
+        <div class="tl-content">
+          <h3>Election Announcement</h3>
+          <p>Election Commission of India announces the election schedule including dates for all phases.</p>
+          <span class="duration">Model Code of Conduct begins</span>
+        </div>
+      </div>
+      <div class="timeline-item" role="listitem">
+        <div class="tl-dot" aria-hidden="true">2</div>
+        <div class="tl-content">
+          <h3>Nomination Filing</h3>
+          <p>Candidates file their nomination papers. Scrutiny happens and withdrawals are allowed within deadlines.</p>
+          <span class="duration">~2 weeks</span>
+        </div>
+      </div>
+      <div class="timeline-item" role="listitem">
+        <div class="tl-dot" aria-hidden="true">3</div>
+        <div class="tl-content">
+          <h3>Election Campaign</h3>
+          <p>Parties and candidates campaign through rallies, ads, and door-to-door outreach. Silence period 48 hrs before voting.</p>
+          <span class="duration">3–5 weeks</span>
+        </div>
+      </div>
+      <div class="timeline-item" role="listitem">
+        <div class="tl-dot" aria-hidden="true">4</div>
+        <div class="tl-content">
+          <h3>Voting Day</h3>
+          <p>Voters go to assigned booths, verify identity, press EVM button. VVPAT slip confirms choice. Exit polls after closing.</p>
+          <span class="duration">Single day (per phase)</span>
+        </div>
+      </div>
+      <div class="timeline-item" role="listitem">
+        <div class="tl-dot" aria-hidden="true">5</div>
+        <div class="tl-content">
+          <h3>Vote Counting</h3>
+          <p>EVMs opened at counting centres. Postal ballots counted first. Results declared round by round.</p>
+          <span class="duration">1 day (results same day)</span>
+        </div>
+      </div>
+      <div class="timeline-item" role="listitem">
+        <div class="tl-dot" aria-hidden="true">6</div>
+        <div class="tl-content">
+          <h3>Results &amp; Government Formation</h3>
+          <p>Winning candidates sworn in. Party/coalition with majority forms government and elects the leader.</p>
+          <span class="duration">1–4 weeks after results</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ PANEL -->
+  <div class="panel" id="panel-quiz">
+    <div class="quiz-area">
+      <div class="score-display">Score: <span id="score">0</span> / <span id="total">0</span></div>
+      <div class="quiz-question" id="quiz-q" role="heading" aria-level="2"></div>
+      <div class="quiz-options" id="quiz-opts" role="group" aria-label="Answer options"></div>
+      <div id="quiz-feedback" aria-live="polite"></div>
+      <button id="next-q-btn" onclick="loadQuestion()" aria-label="Next question">Next Question →</button>
+    </div>
+  </div>
+
+  <!-- GLOSSARY PANEL -->
+  <div class="panel" id="panel-glossary">
+    <div class="glossary-grid">
+      <div class="gloss-card"><h4>Constituency</h4><p>A geographic area whose voters elect one representative to parliament or assembly.</p></div>
+      <div class="gloss-card"><h4>EVM</h4><p>Electronic Voting Machine — the tamper-proof device used to cast and store votes digitally.</p></div>
+      <div class="gloss-card"><h4>VVPAT</h4><p>Voter Verified Paper Audit Trail — prints a paper slip so you can confirm your vote was recorded correctly.</p></div>
+      <div class="gloss-card"><h4>Lok Sabha</h4><p>Lower house of India's parliament. 543 seats elected directly by citizens every 5 years.</p></div>
+      <div class="gloss-card"><h4>Rajya Sabha</h4><p>Upper house. Members elected by state legislators, not directly by citizens.</p></div>
+      <div class="gloss-card"><h4>Model Code of Conduct</h4><p>Rules that govern parties and candidates from announcement day until results are declared.</p></div>
+      <div class="gloss-card"><h4>Affidavit</h4><p>A legal declaration candidates must file disclosing criminal records, assets and liabilities.</p></div>
+      <div class="gloss-card"><h4>Exit Poll</h4><p>A survey of voters leaving booths, used to predict results before official counting begins.</p></div>
+      <div class="gloss-card"><h4>Manifesto</h4><p>A political party's official document listing their promises and plans if elected to power.</p></div>
+      <div class="gloss-card"><h4>Voter ID (EPIC)</h4><p>Electoral Photo Identity Card — issued by ECI, used to verify identity at polling booths.</p></div>
+    </div>
+  </div>
+
+  <footer>ElectionBot · Built for PromptWars Hackathon · Powered by Google Vertex AI · Neutral &amp; Educational</footer>
+
+  <style>.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}</style>
+
+  <script>
+    // ---- TAB SWITCHING ----
+    function switchTab(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.getElementById('panel-' + name).classList.add('active');
+      event.target.classList.add('active');
+      event.target.setAttribute('aria-selected','true');
+      if (name === 'quiz' && !quizLoaded) { loadQuestion(); quizLoaded = true; }
+    }
+
+    // ---- CHAT ----
+    let chatHistory = [];
+
+    function addMessage(text, role) {
+      const box = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = 'message ' + role;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function showTyping() {
+      const box = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = 'message bot typing-wrap';
+      div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+      div.id = 'typing-indicator';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function removeTyping() {
+      const t = document.getElementById('typing-indicator');
+      if (t) t.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const btn = document.getElementById('send-btn');
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      chatHistory.push({ role: 'user', content: text });
+      input.value = '';
+      btn.disabled = true;
+      showTyping();
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, history: chatHistory.slice(-6) })
+        });
+        const data = await res.json();
+        removeTyping();
+        if (data.reply) {
+          addMessage(data.reply, 'bot');
+          chatHistory.push({ role: 'model', content: data.reply });
+        } else {
+          addMessage('Sorry, something went wrong. Please try again.', 'error');
+        }
+      } catch (e) {
+        removeTyping();
+        addMessage('Network error. Please check your connection.', 'error');
+      } finally {
+        btn.disabled = false;
+        input.focus();
+      }
+    }
+
+    function sendQuick(topic) {
+      document.getElementById('user-input').value = topic;
+      sendMessage();
+    }
+
+    // ---- QUIZ ----
+    const quizData = [
+      { q: "How many seats are there in the Lok Sabha?", opts: ["250","543","545","552"], ans: 1, exp: "Lok Sabha has 543 elected seats (+ 2 Anglo-Indian nominated seats earlier, now removed)." },
+      { q: "What does EVM stand for?", opts: ["Electronic Vote Monitor","Electronic Voting Machine","Election Verification Module","Electronic Voter Map"], ans: 1, exp: "EVM = Electronic Voting Machine, used in all Indian elections since 2004." },
+      { q: "What is the minimum age to vote in India?", opts: ["16","18","21","25"], ans: 1, exp: "Citizens aged 18 and above can register and vote in India." },
+      { q: "Who conducts elections in India?", opts: ["Parliament","President of India","Election Commission of India","Supreme Court"], ans: 2, exp: "The Election Commission of India (ECI) is an independent constitutional body that conducts all elections." },
+      { q: "What is the 'Model Code of Conduct'?", opts: ["Law for voters","Rules for candidates and parties during elections","A coding competition","Rules for counting votes"], ans: 1, exp: "The MCC is a set of guidelines that parties and candidates must follow from election announcement until results." },
+      { q: "What does VVPAT do?", opts: ["Counts votes automatically","Prints a paper slip confirming your vote","Sends your vote online","Stores voter ID data"], ans: 1, exp: "VVPAT (Voter Verified Paper Audit Trail) shows a paper slip of your vote for 7 seconds so you can verify." },
+      { q: "How often are Lok Sabha elections held?", opts: ["Every 3 years","Every 4 years","Every 5 years","Every 6 years"], ans: 2, exp: "Lok Sabha elections are held every 5 years unless the house is dissolved earlier." },
+      { q: "What is 'Form 6' used for?", opts: ["Candidate nomination","Voter registration","Filing a complaint","Requesting a recount"], ans: 1, exp: "Form 6 is submitted to register as a new voter on the Electoral Roll." }
+    ];
+
+    let qIndex = 0, score = 0, answered = false, quizLoaded = false;
+    const shuffled = [...quizData].sort(() => Math.random() - 0.5);
+
+    function loadQuestion() {
+      if (qIndex >= shuffled.length) { qIndex = 0; }
+      const q = shuffled[qIndex];
+      answered = false;
+      document.getElementById('quiz-q').textContent = `Q${qIndex+1}. ${q.q}`;
+      document.getElementById('quiz-feedback').textContent = '';
+      document.getElementById('next-q-btn').style.display = 'none';
+
+      const opts = document.getElementById('quiz-opts');
+      opts.innerHTML = '';
+      q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-opt';
+        btn.textContent = opt;
+        btn.setAttribute('aria-label', `Option ${i+1}: ${opt}`);
+        btn.onclick = () => checkAnswer(i, q.ans, q.exp);
+        opts.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(chosen, correct, explanation) {
+      if (answered) return;
+      answered = true;
+      const btns = document.querySelectorAll('.quiz-opt');
+      btns[chosen].classList.add(chosen === correct ? 'correct' : 'wrong');
+      btns[correct].classList.add('correct');
+      btns.forEach(b => b.disabled = true);
+      if (chosen === correct) {
+        score++;
+        document.getElementById('score').textContent = score;
+      }
+      document.getElementById('total').textContent = qIndex + 1;
+      document.getElementById('quiz-feedback').textContent = explanation;
+      document.getElementById('next-q-btn').style.display = 'inline-block';
+      qIndex++;
+    }
+  </script>
+</body>
+</html>
