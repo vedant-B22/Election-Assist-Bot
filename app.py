@@ -34,7 +34,7 @@ def chat():
     try:
         import google.generativeai as genai
         genai.configure(api_key=API_KEY)
-        MODELS = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b"]
+        MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001", "gemini-2.0-flash-lite"]
         last_error = None
         for model_name in MODELS:
             try:
