@@ -53,15 +53,19 @@ def get_ai_response(user_message, history):
         system_instruction=SYSTEM_PROMPT
     )
     
-    chat_history = []
-    for msg in history[-6:]:
-        if msg.get("role") in ["user", "model"] and msg.get("content"):
-            chat_history.append({
-                "role": msg["role"],
-                "parts": [{"text": msg["content"]}]
-            })
-    
-    chat_session = model.start_chat(history=chat_history)
+    from vertexai.generative_models import Content, Part
+
+chat_history = []
+for msg in history[-6:]:
+    if msg.get("role") in ["user", "model"] and msg.get("content"):
+        chat_history.append(
+            Content(
+                role=msg["role"],
+                parts=[Part.from_text(msg["content"])]
+            )
+        )
+
+chat_session = model.start_chat(history=chat_history)
     response = chat_session.send_message(user_message)
     return response.text
 
