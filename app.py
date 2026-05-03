@@ -43,7 +43,7 @@ def chat():
         return jsonify({"error": "Message too long"}), 400
     try:
         token = get_access_token()
-        url = f"https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/gemini-2.0-flash-001:generateContent"
+        url = f"https://{LOCATION}-aiplatform.googleapis.com/v1beta1/projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/gemini-2.0-flash-001:generateContent"
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
