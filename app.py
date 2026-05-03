@@ -39,7 +39,7 @@ safety_settings = [
 ]
 
 model = GenerativeModel(
-    model_name="gemini-1.5-flash-001",
+    model_name="gemini-1.5-flash",
     system_instruction=SYSTEM_PROMPT
 )
 
@@ -86,7 +86,9 @@ def chat():
         return jsonify({"reply": answer})
 
     except Exception as e:
-        return jsonify({"error": f"AI service error: {str(e)}"}), 500
+    import traceback
+    print(traceback.format_exc())
+    return jsonify({"error": f"AI service error: {str(e)}", "detail": traceback.format_exc()}), 500
 
 @app.route("/health")
 def health():
